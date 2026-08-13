@@ -201,3 +201,14 @@ Ni-furfural → Ni-furfural-H
 In each case, only the corresponding Ni catalyst atoms are used for the Bader charge comparison.
 
 The final figure contains two smaller elemental images showing the catalyst before and after the transition and one larger image showing the Bader charge changes across the catalyst surface.
+
+![Figure 1: Example figure of bader charge changes of adsorbing furfural onto Ni](Bader_plots/Ni-to-Ni+furfural/Ni-to-Ni+furfural.png)
+<p align="center">
+  <em>Figure 1: Example figure of bader charge changes of adsorbing furfural onto Ni.</em>
+</p>
+
+![Figure 2: Example figure of bader charge changes of adsorbing furfural and H onto Ni](Bader_plots/Ni-to-Ni+furfural+H/Ni-to-Ni+furfural+H.png)
+<p align="center">
+  <em>Figure 2: Example figure of bader charge changes of adsorbing furfural and H onto Ni.</em>
+</p>
+
