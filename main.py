@@ -8,7 +8,7 @@ import os #Operating system
 import matplotlib.pyplot as plt #Plot function, called here only to account for one input variable
 
 #Define the main function to run imported functions
-def main(base, INITIAL=("ini",), FINAL=("fin",), tol=0.005, cmp=None, repeat=(1,1,1), save_dir="Bader_plots",views=None,element_colors=None,layout="split"):
+def main(base, INITIAL=("ini",), FINAL=("fin",), tol=0.005, cmp=None, repeat=(1,1,1), save_dir="Bader_plots",views=None,element_colors=None,layout="split",labels=None,styles=None):
     structure_files = find_transition(base,INITIAL,FINAL)
     delta_results, delta_max = collect_delta_results(structure_files, skip_errors=True)
     for res in delta_results:
@@ -19,7 +19,7 @@ def main(base, INITIAL=("ini",), FINAL=("fin",), tol=0.005, cmp=None, repeat=(1,
         except Exception as e: #In case the file name cannot be found, pass an error message
             print(f"Error processing {res['transition']}: {e}")
             continue
-        plot_bader_result(res,delta_max,tol,cmp,repeat,save_dir,views,element_colors,layout)
+        plot_bader_result(res,delta_max,tol,cmp,repeat,save_dir,views,element_colors,layout,labels,styles)
 
 #Entry point/switch to run function
 if __name__ == "__main__":
@@ -50,4 +50,21 @@ if __name__ == "__main__":
     #"split" means that the standard ini/fin images will be above each other on the LHS of the image
     #"horizontal" arranges all images horizontally, "vertical" arranges all images vertically
 
-    main(base, INITIAL, FINAL, tol, cmp, repeat, save_dir, views, element_colors, layout) #Start main function
+    #Different labels
+    labels = {
+    "initial": "Initial",
+    "final": "Final",
+    "delta": "Δq"}
+
+    #Font styles
+    styles = {
+    "heading": {
+        "fontname": "Times New Roman",
+        "fontsize": 24,
+        "fontweight": "bold"},
+    "tick": {
+        "fontname": "Times New Roman",
+        "fontsize": 18}
+    }
+
+    main(base, INITIAL, FINAL, tol, cmp, repeat, save_dir, views, element_colors, layout, labels, styles) #Start main function

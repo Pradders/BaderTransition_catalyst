@@ -15,6 +15,26 @@ import os #Operating system
 from colors import get_atom_colors, get_delta_colors
 from layouts import create_axes, iter_axes
 
+# Default labels
+DEFAULT_LABELS = {
+    "initial": "Initial",
+    "final": "Final",
+    "delta": "Δq"
+}
+
+# Default styles
+DEFAULT_STYLES = {
+    "heading": {
+        "fontname": "Times New Roman",
+        "fontsize": 24,
+        "fontweight": "bold"
+    },
+    "tick": {
+        "fontname": "Times New Roman",
+        "fontsize": 18
+    }
+}
+
 #Create a temporary file to check images
 def view_cleanup(atoms, filename="temp_view.png", pause=True):
 
@@ -56,6 +76,21 @@ def plot_bader_result(res, delta_max=1, tol=0.005, cmap=None, repeat = (1,1,1), 
     if cmap is None:
         cmap = plt.cm.RdBu_r
 
+    #Check labels. Use default if invalid or not passed.
+    try:
+        labels["initial"]
+        labels["final"]
+        labels["delta"]
+    except (TypeError, KeyError):
+        labels = DEFAULT_LABELS
+
+    #Check styles. Use default if invalid or not passed.
+    try:
+        styles["heading"]
+        styles["tick"]
+    except (TypeError, KeyError):
+        styles = DEFAULT_STYLES
+
     #Read both initial and final configurations
     atoms_ini = res["ini_structure"].copy()
     atoms_fin = res["fin_structure"].copy()
@@ -87,34 +122,34 @@ def plot_bader_result(res, delta_max=1, tol=0.005, cmap=None, repeat = (1,1,1), 
                 #Initial
                 plot_atoms(atoms_ini, axes[i,0], rotation=rotation,
                            show_unit_cell=0, colors=atom_colors)
-                axes[i,0].set_title("Initial")
+                axes[i,0].set_title(labels["initial"], **styles["heading"])
 
                 #Final
                 plot_atoms(atoms_fin, axes[i,1], rotation=rotation,
                            show_unit_cell=0, colors=atom_colors)
-                axes[i,1].set_title("Final")
+                axes[i,1].set_title(labels["final"], **styles["heading"])
 
-                #Charge transition
+                #Change in Bader charge
                 plot_atoms(atoms_fin_catalyst, axes[i,2], rotation=rotation,
                            show_unit_cell=0, colors=slope_colors)
-                axes[i,2].set_title("Charge transition")
+                axes[i,2].set_title(labels["delta"], **styles["heading"])
 
             elif layout == "vertical": #Vertical array of figures
 
                 #Initial
                 plot_atoms(atoms_ini, axes[0,i], rotation=rotation,
                            show_unit_cell=0, colors=atom_colors)
-                axes[0,i].set_title("Initial")
+                axes[0,i].set_title(labels["initial"], **styles["heading"])
 
                 #Final
                 plot_atoms(atoms_fin, axes[1,i], rotation=rotation,
                            show_unit_cell=0, colors=atom_colors)
-                axes[1,i].set_title("Final")
+                axes[1,i].set_title(labels["final"], **styles["heading"])
 
-                #Charge transition
+                #Change in Bader charge
                 plot_atoms(atoms_fin_catalyst, axes[2,i], rotation=rotation,
                            show_unit_cell=0, colors=slope_colors)
-                axes[2,i].set_title("Charge transition")
+                axes[2,i].set_title(labels["delta"], **styles["heading"])
     
     elif mode == "mixed": #Mixed format (horizontal, vertical)
 
@@ -123,17 +158,17 @@ def plot_bader_result(res, delta_max=1, tol=0.005, cmap=None, repeat = (1,1,1), 
             #Initial
             plot_atoms(atoms_ini, axes["ini"][i], rotation=rotation,
                        show_unit_cell=0, colors=atom_colors)
-            axes["ini"][i].set_title("Initial")
+            axes["ini"][i].set_title(labels["initial"], **styles["heading"])
 
             #Final
             plot_atoms(atoms_fin, axes["fin"][i], rotation=rotation,
                        show_unit_cell=0, colors=atom_colors)
-            axes["fin"][i].set_title("Final")
+            axes["fin"][i].set_title(labels["final"], **styles["heading"])
 
         # ΔBader only drawn once (shared)
         plot_atoms(atoms_fin_catalyst, axes["delta"], rotation=views[0],
                    show_unit_cell=0, colors=slope_colors)
-        axes["delta"].set_title("Charge transition")
+        axes["delta"].set_title(labels["delta"], **styles["heading"])
 
     #Remove borders and tick marks
     for ax in iter_axes(axes):
@@ -147,11 +182,15 @@ def plot_bader_result(res, delta_max=1, tol=0.005, cmap=None, repeat = (1,1,1), 
 
     # Generate color bar, connected to third plot
     if mode == "mixed": #Either charge plot at end 
-        plt.colorbar(sm, ax=axes["delta"], label="Δ Bader charge (e)")
+        cbar = plt.colorbar(sm, ax=axes["delta"])
+        cbar.set_label(label=f"{labels['delta']} (e)",**styles["heading"])
     else: #Or isolated charge plot
-        plt.colorbar(sm, ax=axes[:,2] if layout=="horizontal" else axes[2,:],
-                      label="Δ Bader charge (e)")
+        cbar = plt.colorbar(sm, ax=axes[:,2] if layout=="horizontal" else axes[2,:])
+        cbar.set_label(label=f"{labels['delta']} (e)",**styles["heading"])
 
+    for tick in cbar.ax.get_yticklabels():
+        plt.setp(tick, **styles["tick"])
+    
     # Make save directory
     os.makedirs(save_dir, exist_ok=True)
 

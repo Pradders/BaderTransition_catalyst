@@ -68,11 +68,11 @@ def find_transition(base=os.getcwd(),initial=("ini",),final=("fin",)):
     
     structure_files = [] #Initialise array
 
-    for root, dirs, files in os.walk(base): #Walk from base directory, i.e., where the python file is
+    #Lower case for consistency
+    initial = tuple(i.lower() for i in initial)
+    final = tuple(f.lower() for f in final)
 
-        #Lower case for consistency
-        initial = tuple(i.lower() for i in initial)
-        final = tuple(f.lower() for f in final)
+    for root, dirs, files in os.walk(base): #Walk from base directory, i.e., where the python file is
 
         #Find the initial and final states
         ini_name = next((d for d in dirs if d.lower() in initial), None)
