@@ -7,7 +7,7 @@ The code is intended for systems where the total number of atoms may differ betw
 Ni → Ni-furfural
 Ni-furfural → Ni-furfural-H
 
-Version 1.0 (v1.0) current release.
+Version 2.0 (v2.0.0) current release.
 
 # General procedure
 
@@ -52,9 +52,9 @@ N.B. The total number of atoms does **not** need to be identical between the two
 The atomic index, element and Cartesian coordinates of every atom are displayed for both structures.
 
 The user confirms that corresponding catalyst atoms can be identified and then enters their indices. Individual indices, ranges, or combinations can be used, e.g.:
-
+'''
 1-35,40-45,50,52
-
+'''
 Displayed indices begin at 1 for convenience, while the code converts them to Python's zero-based indices.
 
 The element at each selected index is checked between the two structures. The maximum catalyst displacement is then displayed, allowing the user to decide whether the correspondence is suitable.
@@ -86,13 +86,23 @@ The maximum absolute catalyst Bader charge difference across all analysed system
 Atoms may extend over periodic cell boundaries, particularly adsorbates. The existing shifting functionality is therefore retained.
 
 Four modes are available:
-
+'''
 1. Same shift per (ini, fin) pair
 2. Manual shift for EACH structure
 3. Same shift for ALL structures
 4. NO shift to ANY structure
-
+'''
 Shifting is applied to the complete structures before the catalyst-only structures are extracted for plotting.
+
+### Reference surface alignment
+
+An optional external reference surface can now be supplied for the structural plots.
+
+When a reference surface is provided, the selected catalyst atoms in the Bader plot are aligned to the reference surface while retaining their actual Bader charge values.
+
+If no external reference surface is provided, the final structure is used as the reference. This ensures that the catalyst surface in the initial-state visualisation is positioned consistently with the final state.
+
+Periodic boundary conditions are accounted for when matching catalyst atoms to an external reference surface.
 
 ## Colour coding
 
@@ -117,9 +127,9 @@ If the transition folders are nested within additional folders, their directory 
 ## Bader maximum
 
 If an existing `bader_max.json` file is found:
-
+'''
 Existing bader_max.json found. Load saved maximum Bader charge difference? (y/n):
-
+'''
 The user can choose whether to reuse the stored value.
 
 ## Catalyst identification
@@ -131,18 +141,22 @@ Initial structure
 Final structure
 
 The user is then asked:
-
+'''
 Can you identify corresponding catalyst atoms in the two structures? (y/n):
-
+'''
 After confirmation:
-
+'''
 Enter catalyst atom indices (e.g. 1-35,40-45,50,52):
-
+'''
 The maximum displacement is displayed, followed by:
-
+'''
 Do these positions correspond sufficiently for the comparison? (y/n):
-
+'''
 If rejected, the analysis is cancelled.
+
+## Reference surface
+
+An optional reference surface may be supplied for structural visualisation. This is to ensure consistent alignment of atoms. If a reference folder is provided, the reference structure is used to align the catalyst surface in the Bader plot. If no reference folder is provided, the final structure is used as the reference surface.
 
 ## Key files, folders and inputs
 
@@ -170,6 +184,10 @@ save_dir = "Bader_plots"
 
 element_colors = {"Ni": "lightgray", "C": "black"}
 
+reference_folder = None
+
+reference_symbols = ("Ni",)
+
 ## External function files
 
 [`io_utils.py`](io_utils.py) — Collects file locations and JSON files.
@@ -184,7 +202,7 @@ element_colors = {"Ni": "lightgray", "C": "black"}
 
 [`layouts.py`](layouts.py) — Controls image arrangement.
 
-[`geometry.py`](geometry.py) — Handles structural shifts.
+[`geometry.py`](geometry.py) — Handles structural shifts and reference-surface alignment.
 
 [`inputs.py`](inputs.py) — Controls user inputs and shifting modes.
 
@@ -203,12 +221,13 @@ In each case, only the corresponding Ni catalyst atoms are used for the Bader ch
 The final figure contains two smaller elemental images showing the catalyst before and after the transition and one larger image showing the Bader charge changes across the catalyst surface.
 
 ![Figure 1: Example figure of bader charge changes of adsorbing furfural onto Ni](Bader_plots/Ni-to-Ni+furfural/Ni-to-Ni+furfural.png)
+
 <p align="center">
   <em>Figure 1: Example figure of bader charge changes of adsorbing furfural onto Ni.</em>
 </p>
 
 ![Figure 2: Example figure of bader charge changes of adsorbing furfural and H onto Ni](Bader_plots/Ni-to-Ni+furfural+H/Ni-to-Ni+furfural+H.png)
+
 <p align="center">
   <em>Figure 2: Example figure of bader charge changes of adsorbing furfural and H onto Ni.</em>
 </p>
-
