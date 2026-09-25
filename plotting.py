@@ -9,11 +9,13 @@ from ase.io import write
 #Plot atoms and use colormap where necessary
 import matplotlib.pyplot as plt #Plot adsorption surfaces
 
+import numpy as np #Mathematical analysis
 import os #Operating system
 
 #Import external functions
 from colors import get_atom_colors, get_delta_colors
 from layouts import create_axes, iter_axes
+from geometry import align_to_reference, align_to_final
 
 # Default labels
 DEFAULT_LABELS = {
@@ -62,7 +64,10 @@ def view_cleanup(atoms, filename="temp_view.png", pause=True):
         pass
 
 #Plot all configurations, including with Bader charge difference shading gradients
-def plot_bader_result(res, delta_max=1, tol=0.005, cmap=None, repeat = (1,1,1), save_dir="Bader_plots",views=None,element_colors=None,layout="mixed_left"):
+def plot_bader_result(res, delta_max=1, tol=0.005, cmap=None, repeat = (1,1,1), save_dir="Bader_plots", views=None, element_colors=None,
+                      layout="mixed_left", labels=None, styles=None, reference_atoms=None, reference_symbols=("Ni",)):
+
+    from check import check_reference_structure
 
     # skip empty delta
     if res["delta"] is None or len(res["delta"]) == 0:
@@ -95,6 +100,29 @@ def plot_bader_result(res, delta_max=1, tol=0.005, cmap=None, repeat = (1,1,1), 
     atoms_ini = res["ini_structure"].copy()
     atoms_fin = res["fin_structure"].copy()
     atoms_fin_catalyst = res["fin_catalyst"].copy() #Only one is needed, since the catalyst will be the same on both sides and the transition is being modelled here.
+    #The final structure is better since it is more convenient to compare to the final state.
+
+    #Activate if reference atoms are defined
+    if reference_atoms is not None:
+        # Use the reference surface for the initial and final visual structures.
+        for atoms in (atoms_ini, atoms_fin):
+            check_reference_structure(atoms, reference_atoms, reference_symbols)
+        atoms_ini = prepare_visual_structure(atoms_ini,reference_atoms,reference_symbols)
+        atoms_fin = prepare_visual_structure(atoms_fin,reference_atoms,reference_symbols)
+
+        # Align the Bader catalyst to the external reference surface.
+        atoms_fin_catalyst.wrap()
+        reference_atoms = reference_atoms.copy()
+        reference_atoms.wrap()
+        atoms_fin_catalyst = align_to_reference(atoms_fin_catalyst,reference_atoms,reference_symbols)
+
+    #Otherwise, use the structures as they are...
+    else:
+        atoms_fin_catalyst.wrap()
+        atoms_fin.wrap()
+        atoms_ini.wrap()
+        #...but the initial Ni atoms should match with those in the final image for consistency
+        atoms_ini = align_to_final(atoms_ini,atoms_fin,reference_symbols)
 
     #For visualisation
     if repeat != (1, 1, 1):
@@ -213,3 +241,86 @@ def plot_bader_result(res, delta_max=1, tol=0.005, cmap=None, repeat = (1,1,1), 
 
     #Display figures if desired
     #plt.show()
+
+#Prepare a visual copy of an NEB image so that the selected reference atoms use the same periodic representation as the reference structure.
+def prepare_visual_structure(atoms, reference_atoms, reference_symbols):
+
+    visual_reference = reference_atoms.copy()
+
+    #Get fractional coordinates inside the unit cell.
+    current_scaled = atoms.get_scaled_positions(wrap=False)
+    reference_scaled = reference_atoms.get_scaled_positions(wrap=True)
+
+    cell = atoms.get_cell()
+
+    #Keep track of the occurrence number of each element.
+    #This allows the reference structure to contain more than
+    #one type of substrate atom.
+    reference_indices = {}
+    current_indices = {}
+
+    for symbol in reference_symbols:
+
+        reference_indices[symbol] = [
+            i for i, atom_symbol
+            in enumerate(reference_atoms.get_chemical_symbols())
+            if atom_symbol == symbol]
+
+        current_indices[symbol] = [
+            i for i, atom_symbol
+            in enumerate(atoms.get_chemical_symbols())
+            if atom_symbol == symbol]
+
+    # Find one common periodic translation for the whole structure.
+    best_shift = np.zeros(3)
+    best_distance = np.inf   
+
+    for x_shift in (-1, 0, 1):
+
+        for y_shift in (-1, 0, 1):
+
+            total_distance = 0.0
+
+            for symbol in reference_symbols:
+
+                for reference_index, current_index in zip(
+                    reference_indices[symbol],
+                    current_indices[symbol]):
+
+                    # Current atom with a common periodic translation.
+                    candidate = current_scaled[current_index].copy()
+                    candidate[0] += x_shift
+                    candidate[1] += y_shift
+
+                    # Difference from the corresponding reference atom.
+                    difference = candidate - reference_scaled[reference_index]
+
+                    # Convert to Cartesian distance.
+                    distance = np.linalg.norm(difference @ cell)
+
+                    total_distance += distance**2
+
+            # Keep the common translation giving the smallest
+            # total distance for all reference atoms.
+            if total_distance < best_distance:
+
+                best_distance = total_distance
+                best_shift = np.array([x_shift, y_shift, 0.0])
+
+
+    # Apply the SAME periodic translation to the entire structure.
+    reference_scaled += best_shift
+    visual_reference.set_cell(cell)
+    visual_reference.set_scaled_positions(reference_scaled)
+
+    # Collect only the atoms that are NOT part of the reference substrate.
+    non_reference_indices = [
+        i for i, symbol in enumerate(atoms.get_chemical_symbols())
+        if symbol not in reference_symbols]
+
+    visual_adsorbates = atoms[non_reference_indices]
+
+    # Combine reference substrate with the non-reference atoms.
+    visual_atoms = visual_reference + visual_adsorbates
+
+    return visual_atoms
