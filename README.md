@@ -8,6 +8,10 @@ Ni → Ni-furfural
 Ni-furfural → Ni-furfural-H
 
 Version 2.0 (v2.0.0) current release.
+* Added reference-surface alignment for Bader plots.
+* Added support for no external reference, using the final structure as the reference.
+* Added align_to_reference() and align_to_final() for consistent surface-atom positioning.
+* Preserved actual Bader atoms and Δq colours.
 
 # General procedure
 
