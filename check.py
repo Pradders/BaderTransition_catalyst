@@ -15,17 +15,24 @@ def check_catalyst_consistency(item):
             x, y, z = atom.position
             print(f"{i+1:4d}  {atom.symbol:2s}  {x:10.4f} {y:10.4f} {z:10.4f}")
 
-    # Allow the user to confirm the correspondence in atomic and elemental positions
+    # Allows the user to confirm the correspondence in atomic and elemental positions
     if not confirm(
         "\nCan you identify corresponding catalyst atoms in the two structures? (y/n): "):
         raise ValueError("Catalyst correspondence not confirmed. Analysis cancelled.")
 
     #Now that the systems are visually confirmed, now input the atomic indices
-    catalyst_indices = sorted(set(
-        i-1
-        for part in input("\nEnter catalyst atom indices (e.g. 1-35,40-45,50,52): ").split(",")
-        for i in (range(int(part.split("-")[0]), int(part.split("-")[1]) + 1)
-                  if "-" in part else [int(part)])))
+    try:
+        catalyst_indices = sorted(set(
+            i-1
+            for part in input("\nEnter catalyst atom indices (e.g. 1-35,40-45,50,52): ").split(",")
+            for i in (range(int(part.split("-")[0]), int(part.split("-")[1]) + 1)
+                if "-" in part else [int(part)])))
+
+        if not catalyst_indices:
+            raise ValueError
+
+    except ValueError:
+        raise ValueError("Could not process catalyst atom indices.")
 
     # Check that the indices are not beyond the scope 
     if any(i < 0 or i >= len(ini_atoms) or i >= len(fin_atoms)
@@ -51,6 +58,38 @@ def check_catalyst_consistency(item):
 
     return catalyst_indices #Return the indices now that all checks have passed
 
+#Check length consistency of Bader files
+def check_bader_consistency(item, ini_q, fin_q):
+
+    # Bader vs Bader
+    if len(ini_q) != len(fin_q): #i.e., Check that Bader charge lengths are consistent
+        raise ValueError( #If not, raise an error
+            f"Atom count mismatch in {item['transition']}: "
+            f"ini={len(ini_q)}, fin={len(fin_q)}"
+        )
+
+    #Atoms in each structure
+    ini_atoms = read(item["ini_structure"])
+    fin_atoms = read(item["fin_structure"])
+
+    #Extract length of atoms
+    ini_len = len(ini_atoms)
+    fin_len = len(fin_atoms)
+
+    # POSCAR vs Bader atom length
+    if (fin_len != len(fin_q)) or (ini_len != len(ini_q)): #i.e., Check that Bader charge and POSCAR/CONTCAR lengths are consistent
+        raise ValueError( #If not, raise an error
+            f"Mismatch between POSCAR/CONTCAR and Bader atoms in {item['transition']}"
+        )
+    
+    #Check element ordering consistency
+    for i, (a_ini, a_fin) in enumerate(zip(ini_atoms, fin_atoms)):
+        if a_ini.symbol != a_fin.symbol:
+            raise ValueError(
+                f"Element mismatch at index {i+1} in {item['transition']}: "
+                f"{a_ini.symbol} (ini) != {a_fin.symbol} (fin)"
+            )
+
 #Check that Bader coordinates and POSCAR/CONTCAR coordinates are equivalent
 def check_bader_alignment(atoms, acf_coords, tol=1e-3):
 
@@ -70,7 +109,7 @@ def check_bader_alignment(atoms, acf_coords, tol=1e-3):
             f"(max diff = {np.max(diff):.4f} Å)"
         )
 
-#Check that the reference structure contains the requested elements and that the number of reference atoms matches the NEB structure.
+# Check that the input structure contains the same number of reference atoms as the supplied reference structure.
 def check_reference_structure(atoms, reference_atoms, reference_symbols):
 
     #Check that reference symbols were provided.
@@ -85,7 +124,7 @@ def check_reference_structure(atoms, reference_atoms, reference_symbols):
         if reference_counts[symbol] == 0: #Should contain at least one symbol
             raise ValueError(f"Reference structure does not contain the requested element '{symbol}'.")
 
-    #Check that the NEB structure contains the same number of reference atoms as the supplied reference structure.
+    #Check that the supplied initial and final structures contain the same number of reference atoms as the supplied reference structure.
     atoms_counts = Counter(atoms.get_chemical_symbols())
 
     for symbol in reference_symbols: #Provide data about the missing elements
@@ -93,4 +132,4 @@ def check_reference_structure(atoms, reference_atoms, reference_symbols):
             raise ValueError(
                 f"Reference mismatch for '{symbol}': "
                 f"reference contains {reference_counts[symbol]} atoms, "
-                f"but the NEB structure contains {atoms_counts[symbol]}.")
+                f"but the supplied structure contains {atoms_counts[symbol]}.")

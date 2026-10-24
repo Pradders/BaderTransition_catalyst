@@ -3,7 +3,7 @@
 #Import functions for coloring
 from ase.data.colors import jmol_colors
 from ase.data import atomic_numbers
-from matplotlib.colors import TwoSlopeNorm #Used to create gradient
+from matplotlib.colors import TwoSlopeNorm #Used to create color gradient
 
 import numpy as np #Mathematical calculations
 

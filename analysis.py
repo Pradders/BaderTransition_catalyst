@@ -8,7 +8,7 @@ import numpy as np #Mathematical calculations
 
 #Import external functions
 from io_utils import read_bader, delete_file, load_json, save_json
-from check import check_catalyst_consistency, check_bader_alignment
+from check import check_catalyst_consistency, check_bader_consistency, check_bader_alignment
 from inputs import process_structures, confirm
 
 import os #Operating system
@@ -46,15 +46,19 @@ def collect_delta_results(structure_files, skip_errors=False):
             if len(ini_q) == 0 or len(fin_q) == 0:
                 raise ValueError(f"Empty ACF.dat file in {item['transition']}")
 
-            #Coordinate alignment checks
-            check_bader_alignment(ini_atoms, ini_coords)
+            #Checks
+            check_bader_consistency(item, ini_q, fin_q) #Check consistency of atomic length between files
+            check_bader_alignment(ini_atoms, ini_coords) #Coordinate alignment check
             check_bader_alignment(fin_atoms, fin_coords)
 
             #Identify and check catalyst
             catalyst_indices = check_catalyst_consistency(item)
 
+            if len(catalyst_indices) == 0:
+                raise ValueError("No catalyst atoms selected.")
+
             #Check catalyst Bader data
-            if any(i >= len(ini_q) or i >= len(fin_q) for i in catalyst_indices):
+            if any(i < 0 or i >= len(ini_q) or i >= len(fin_q) for i in catalyst_indices):
                 raise ValueError("Catalyst atom index is outside the Bader data.")
 
             #Calculate Bader charge difference
@@ -86,7 +90,7 @@ def collect_delta_results(structure_files, skip_errors=False):
 
         except Exception as e:
             if skip_errors: #Only if true, set to false otherwise
-                print(e)
+                print(f"Error processing {item['transition']}: {e}")
                 continue
             else:
                 raise #Raise error if necessary        
@@ -102,7 +106,8 @@ def collect_delta_results(structure_files, skip_errors=False):
     #print(delta_results)
 
     #Save updated maximum for future reuse
-    save_json(delta_max, "bader_max.json")
+    if delta_results:
+        save_json(delta_max, "bader_max.json")
 
     #Output this array for future use
     return delta_results, delta_max

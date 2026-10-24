@@ -5,6 +5,11 @@ import matplotlib.gridspec as gridspec #Graphing in grid format
 import numpy as np #Mathematical calculations
 
 def create_axes(layout, n_rot):
+
+    # n_rot is always an integer, but it cannot have no value, else the code will not proceed
+    if n_rot == 0:
+        raise ValueError("At least one view must be specified.")
+        
     if layout == "horizontal": #Horizontal
         fig, axes = plt.subplots(n_rot, 3, figsize=(12, 6*n_rot), squeeze=False)
         return fig, axes, "grid" #return also a keyword

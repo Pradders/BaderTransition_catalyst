@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt #Plot function, called here only to account for 
 
 #Define the main function to run imported functions
 def main(base, INITIAL=("ini",), FINAL=("fin",), tol=0.005, cmp=None, repeat=(1,1,1), save_dir="Bader_plots",views=None,
-         element_colors=None,layout="split",labels=None,styles=None,reference_folder=None, reference_symbols=("Ni",)):
+         element_colors=None,layout="split",labels=None,styles=None,reference_folder=None,reference_symbols=("Ni",)):
     structure_files = find_transition(base,INITIAL,FINAL)
     reference_atoms = None
     if reference_folder is not None:
@@ -19,13 +19,10 @@ def main(base, INITIAL=("ini",), FINAL=("fin",), tol=0.005, cmp=None, repeat=(1,
             raise ValueError("Could not load the reference structure.")
     delta_results, delta_max = collect_delta_results(structure_files, skip_errors=True)
     for res in delta_results:
-        try: #Output the name of the transition here to enable the user to know which system has been processed
-            parts = res["transition"].split(os.sep)
-            transition_name = "_".join(parts)
-            print(f"\nProcessing: {transition_name}")
-        except Exception as e: #In case the file name cannot be found, pass an error message
-            print(f"Error processing {res['transition']}: {e}")
-            continue
+        parts = res["transition"].split(os.sep)
+        transition_name = "_".join(parts)
+        print(f"\nProcessing: {transition_name}") #Output the name of the transition here to enable the user to know which system has been processed
+        
         plot_bader_result(res,delta_max,tol,cmp,repeat,save_dir,views,element_colors,layout,labels,styles,reference_atoms,reference_symbols)
 
 #Entry point/switch to run function
@@ -41,10 +38,10 @@ if __name__ == "__main__":
     save_dir="Bader_plots" #Save folder
 
     views = [ #Different rotations to view atomic/surface configurations
-    ('0x,0y,0z'),     # top
-    #('-90x,0y,0z'),    # side
-    #('-90x,-90y,0z'), # front
-    ] #Choose one of ('0x,0y,0z') #top, ('90x,0y,0z') #side, ('-90x,-90y,0z') #front, or add other rotations as desired
+    "0x,0y,0z",     # top
+    #"-90x,0y,0z",    # side
+    #"-90x,-90y,0z", # front
+    ] #Choose one of ("0x,0y,0z") #top, ("90x,0y,0z") #side, ("-90x,-90y,0z") #front, or add other rotations as desired
 
     element_colors = { #Define desired colors for atoms in POSCAR/CONTCAR if desired
         "Ni": "lightgray",
@@ -54,8 +51,9 @@ if __name__ == "__main__":
         }
     
     layout = "split" #also "horizontal" and "vertical"
-    #"split" means that the standard ini/fin images will be above each other on the LHS of the image
-    #"horizontal" arranges all images horizontally, "vertical" arranges all images vertically
+    # "split" means that the standard ini/fin images will be above each other on the LHS of the image
+    # "horizontal" arranges all images horizontally
+    # "vertical" arranges all images vertically
 
     #Different labels
     labels = {
@@ -74,11 +72,16 @@ if __name__ == "__main__":
         "fontsize": 18}
     }
 
-    # Optional reference structure used to keep the substrate representation consistent across different systems.
-    # Use reference_folder = None to analyse structures without an external reference.
-    # Else, direct the variable to the folder containing the relevant CONTCAR/POSCAR file.
-    reference_folder = "reference"
-    #reference_folder = None
+    # Optional reference surface for consistent substrate visualisation.
+    # Ensure the reference and input structures have compatible cell dimensions,
+    # cell orientation, and ordering of the selected substrate atoms.
+    # The reference is for visualisation; it should not alter Bader charge calculations.
+    include_reference = True
+
+    reference_folder = "Reference" if include_reference else None
+
+    # Elements used to identify substrate atoms for visual alignment, including when the external reference structure is disabled.
     reference_symbols = ("Ni",)
 
+    #Load the main function
     main(base, INITIAL, FINAL, tol, cmp, repeat, save_dir, views, element_colors, layout, labels, styles, reference_folder, reference_symbols) #Start main function

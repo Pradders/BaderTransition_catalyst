@@ -5,13 +5,18 @@ import json #JS file
 import os #Operating system
 
 #Collect CONTCAR folder location first, failing that POSCAR folder location, or failing that raise an error
-def get_structure(folder, files):
-    if "CONTCAR" in files:
-        return os.path.join(folder, "CONTCAR")
-    elif "POSCAR" in files:
-        return os.path.join(folder, "POSCAR")
+def find_structure(folder):
+    #Locate CONTCAR first and then POSCAR otherwise
+    contcar = os.path.join(folder, "CONTCAR")
+    poscar = os.path.join(folder, "POSCAR")
+
+    #Return the file location as a string
+    if os.path.isfile(contcar):
+        return contcar
+    elif os.path.isfile(poscar):
+        return poscar
     else:
-        raise FileNotFoundError(f"No CONTCAR or POSCAR in {folder}")
+        return None
 
 #Collect data from ACF.dat as an array
 def read_bader(acf_file):
@@ -58,8 +63,15 @@ def read_bader(acf_file):
     for line in lines:
         parts = line.split() #split lines by whitespace
         if parts and parts[0].isdigit(): #Exclude extraneous data, especially if not in columns
+
+            if len(parts) <= max(charge_col, x_col, y_col, z_col):
+                raise ValueError(f"Malformed data row in {acf_file}: {line.strip()}")
+            
             coordinates.append([float(parts[x_col]),float(parts[y_col]),float(parts[z_col])]) #Append coordinates to new array
             charges.append(float(parts[charge_col])) #Append charges to new array
+
+    if not charges:
+        raise ValueError(f"No atomic data rows found in {acf_file}")
 
     return np.array(coordinates), np.array(charges) #Return new arrays
 
@@ -85,13 +97,9 @@ def find_transition(base=os.getcwd(),initial=("ini",),final=("fin",)):
             ini_dir = os.path.join(root, ini_name)
             fin_dir = os.path.join(root, fin_name)
 
-            #Collect file names in these directories
-            ini_files = os.listdir(ini_dir)
-            fin_files = os.listdir(fin_dir)
-
             #Collect POSCAR/CONTCAR directories
-            ini_struct = get_structure(ini_dir, ini_files)
-            fin_struct = get_structure(fin_dir, fin_files)
+            ini_struct = find_structure(ini_dir)
+            fin_struct = find_structure(fin_dir)
 
             #Collect ACF.dat directory
             ini_acf = os.path.join(ini_dir, "ACF.dat")
@@ -101,7 +109,12 @@ def find_transition(base=os.getcwd(),initial=("ini",),final=("fin",)):
             transition = os.path.relpath(root, base)
 
             #Add directories and root folder into a file for easier access
-            if all([ini_struct and fin_struct and os.path.isfile(ini_acf) and os.path.isfile(fin_acf)]): #As long that all files are accessible, else skip an image(s)
+            if (
+                ini_struct is not None
+                and fin_struct is not None
+                and os.path.isfile(ini_acf)
+                and os.path.isfile(fin_acf)): #As long that all files are accessible, else skip an image(s)
+
                 structure_files.append({
                     "transition": transition, 
                     "ini_structure": ini_struct, #Initial structure
@@ -109,8 +122,6 @@ def find_transition(base=os.getcwd(),initial=("ini",),final=("fin",)):
                     "ini_acf": ini_acf, #Initial charges
                     "fin_acf": fin_acf #Final charges
                 })
-
-            
 
     #Check item lists just in case to ensure that each file was indeed read
     #for item in structure_files:

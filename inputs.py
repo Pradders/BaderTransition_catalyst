@@ -1,6 +1,5 @@
 from geometry import build_shift, apply_shift #Atomic shifting functions
 from plotting import view_cleanup #Create a temporary figure(s)
-import numpy as np #Mathematical calculations
 from io_utils import save_json, load_json
 
 _current_mode = None #Global variable in selecting mode of imaging
@@ -14,7 +13,7 @@ def get_int(prompt):
             print("Invalid input. Please enter an integer (e.g., -1, 0, 1).")
 
 #Choose whether to apply shifts to all or some images
-def choose_mode():
+def choose_shift_mode():
 
     global _current_mode #Global variable
     if _current_mode is not None:
@@ -25,10 +24,10 @@ def choose_mode():
         print("\nSelect shift mode:")
         print("1: SAME shift per (ini, fin) pair") #Mode 1: same shift for each (ini, fin) image pair
         print("2: MANUAL shift for EACH image") #Mode 2: manual shift for each individual image
-        print("3: SAME shift for ALL images") #Mode 3: same shift for all images
+        print("3: SAME shift for ALL images") #Mode 3: same saved shift for all images
         print("4: NO shift to ANY image") #Mode 4: no applied shift to any individual image
 
-        #Which method? Select an integer among 1, 2, and 3.
+        #Which method? Select an integer among 1, 2, 3, and 4.
         mode = get_int("Enter mode (1/2/3/4): ")
         #Ask if correct, else restart loop
         if mode in [1, 2, 3, 4]:
@@ -47,12 +46,10 @@ def confirm(prompt="Accept this result/outcome? (y/n): "):
             return ans == "y"
         print("Please enter 'y' or 'n'.")
 
-
-
 #Depending on the mode selected, apply appropriate imaging collection method
 def process_structures(atoms_ini, atoms_fin):
 
-    mode = choose_mode() #Which mode?
+    mode = choose_shift_mode() #Which mode?
 
     if mode == 1: #Mode 1: same shift for each (ini, fin) image pair
 
@@ -86,7 +83,7 @@ def process_structures(atoms_ini, atoms_fin):
 
         return test_ini, test_fin #Return shifted results
 
-    elif mode == 3: #Mode 3: same shift for each individual image
+    elif mode == 3: #Mode 3: same shift for all images
 
         shift = load_json("shift.json") #Load constant shift
 
