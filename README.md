@@ -1,4 +1,4 @@
-# BaderCharge_CatalystSurface
+# BaderTransition_catalyst
 
 Leverages ASE, numpy and pyplot to identify corresponding catalyst atoms between two VASP structures, calculate their differences in Bader charges, and colour the catalyst atoms according to their relative charge changes.
 
