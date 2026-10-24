@@ -14,6 +14,12 @@ Improved defensive programming and input validation across structure, Bader data
 * Improved error handling for invalid catalyst selections and inconsistent atomic data.
 * Retained reference-surface alignment, structural shifting and catalyst-only Bader charge plotting.
 
+# Related projects
+This repository is part of a collection of ASE-based tools for visualising VASP structures and analysing Bader charge changes.
+* [StructurePlotting_ASE](https://github.com/Pradders/StructurePlotting_ASE) — General visualisation of VASP structures, including top and side views, atomic shifting and optional reference-surface alignment.
+* [BaderTransition_atomplot](https://github.com/Pradders/BaderTransition_atomplot) — Visualisation of Bader charge differences between initial and final structures.
+* [BaderTransition_catalyst](https://github.com/Pradders/BaderTransition_catalyst) — Catalyst-specific Bader charge analysis, comparing corresponding catalyst atoms even when the total number of atoms differs between structures.
+
 # General procedure
 
 ## Overview
