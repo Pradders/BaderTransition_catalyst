@@ -7,11 +7,12 @@ The code is intended for systems where the total number of atoms may differ betw
 Ni → Ni-furfural
 Ni-furfural → Ni-furfural-H
 
-Version 2.0 (v2.0.0) current release.
-* Added reference-surface alignment for Bader plots.
-* Added support for no external reference, using the final structure as the reference.
-* Added align_to_reference() and align_to_final() for consistent surface-atom positioning.
-* Preserved actual Bader atoms and Δq colours.
+Version 3.0 (v3.0.0) — current release.
+Improved defensive programming and input validation across structure, Bader data and catalyst-index checks.
+* Updated input confirmation to support custom prompts throughout the workflow.
+* Removed the unused atoms.py module.
+* Improved error handling for invalid catalyst selections and inconsistent atomic data.
+* Retained reference-surface alignment, structural shifting and catalyst-only Bader charge plotting.
 
 # General procedure
 
@@ -24,6 +25,8 @@ The catalyst atoms are manually identified after the initial and final structure
 1. The selected indices exist in both structures.
 2. The elements at the selected indices are consistent.
 3. The user confirms that the selected atoms correspond sufficiently.
+
+Additional validation checks that the Bader charge data, atomic structures and atomic coordinates are consistent before calculating charge differences.
 
 The maximum displacement of the selected catalyst atoms is displayed, but identical positions are not required because structural relaxation may occur.
 
@@ -49,6 +52,8 @@ reactionORtransition/
 
 CONTCAR/POSCAR and ACF.dat are mandatory.
 
+Incomplete transitions are excluded during file discovery. Missing files, malformed Bader data, inconsistent atom counts and coordinate mismatches are handled through explicit checks and informative errors.
+
 N.B. The total number of atoms does **not** need to be identical between the two structures. Only the selected catalyst atoms need to correspond.
 
 ## Catalyst identification
@@ -62,6 +67,8 @@ The user confirms that corresponding catalyst atoms can be identified and then e
 Displayed indices begin at 1 for convenience, while the code converts them to Python's zero-based indices.
 
 The element at each selected index is checked between the two structures. The maximum catalyst displacement is then displayed, allowing the user to decide whether the correspondence is suitable.
+
+Invalid index input, empty selections, out-of-range indices and mismatched elements are checked before proceeding.
 
 ## Bader charge difference
 
@@ -85,6 +92,8 @@ Only the selected catalyst atoms are included in the charge-transition plot.
 
 The maximum absolute catalyst Bader charge difference across all analysed systems is stored and used for the colour scale. Differences below the specified tolerance (default: 0.005 e) are treated as zero.
 
+The saved maximum is managed through `bader_max.json`, allowing the user to reuse a previously stored colour-scale maximum.
+
 ## Projection
 
 Atoms may extend over periodic cell boundaries, particularly adsorbates. The existing shifting functionality is therefore retained.
@@ -98,6 +107,8 @@ Four modes are available:
 '''
 Shifting is applied to the complete structures before the catalyst-only structures are extracted for plotting.
 
+User confirmation is supported for both general shift decisions and context-specific prompts.
+
 ### Reference surface alignment
 
 An optional external reference surface can now be supplied for the structural plots.
@@ -107,6 +118,8 @@ When a reference surface is provided, the selected catalyst atoms in the Bader p
 If no external reference surface is provided, the final structure is used as the reference. This ensures that the catalyst surface in the initial-state visualisation is positioned consistently with the final state.
 
 Periodic boundary conditions are accounted for when matching catalyst atoms to an external reference surface.
+
+Reference structures are checked for the presence and number of the requested reference elements before visual alignment.
 
 ## Colour coding
 
@@ -136,6 +149,8 @@ Existing bader_max.json found. Load saved maximum Bader charge difference? (y/n)
 '''
 The user can choose whether to reuse the stored value.
 
+The maximum is saved after processing the available results.
+
 ## Catalyst identification
 
 The structures are displayed first:
@@ -157,6 +172,8 @@ The maximum displacement is displayed, followed by:
 Do these positions correspond sufficiently for the comparison? (y/n):
 '''
 If rejected, the analysis is cancelled.
+
+Invalid confirmation responses are rejected until a valid y or n response is supplied.
 
 ## Reference surface
 
