@@ -19,6 +19,7 @@ This repository is part of a collection of ASE-based tools for visualising VASP 
 * [StructurePlotting_ASE](https://github.com/Pradders/StructurePlotting_ASE) — General visualisation of VASP structures, including top and side views, atomic shifting and optional reference-surface alignment.
 * [BaderTransition_atomplot](https://github.com/Pradders/BaderTransition_atomplot) — Visualisation of Bader charge differences between initial and final structures.
 * [BaderTransition_catalyst](https://github.com/Pradders/BaderTransition_catalyst) — Catalyst-specific Bader charge analysis, comparing corresponding catalyst atoms even when the total number of atoms differs between structures.
+* [NEBplotting_ASE](https://github.com/Pradders/NEBplotting_ASE) — General top-view visualisation of NEB structures calculated by VASP, including atomic shifting and optional reference-surface alignment.
 
 # General procedure
 
