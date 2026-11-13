@@ -74,9 +74,9 @@ N.B. The total number of atoms does **not** need to be identical between the two
 The atomic index, element and Cartesian coordinates of every atom are displayed for both structures.
 
 The user confirms that corresponding catalyst atoms can be identified and then enters their indices. Individual indices, ranges, or combinations can be used, e.g.:
-'''python
+```python
 1-35,40-45,50,52
-'''
+```
 Displayed indices begin at 1 for convenience, while the code converts them to Python's zero-based indices.
 
 The element at each selected index is checked between the two structures. The maximum catalyst displacement is then displayed, allowing the user to decide whether the correspondence is suitable.
@@ -89,9 +89,9 @@ This manual selection allows catalyst atoms to be compared even when adsorbates 
 
 The catalyst-only Bader charge difference is calculated as:
 
-'''python
+```python
 Δq = q_final - q_initial
-'''
+```
 
 For example:
 
@@ -114,12 +114,12 @@ The saved maximum is managed through `bader_max.json`, allowing the user to reus
 Atoms may extend over periodic cell boundaries, particularly adsorbates. The existing shifting functionality is therefore retained.
 
 Four modes are available:
-'''python
+```python
 1. Same shift per (ini, fin) pair
 2. Manual shift for EACH structure
 3. Same shift for ALL structures
 4. NO shift to ANY structure
-'''
+```
 Shifting is applied to the complete structures before the catalyst-only structures are extracted for plotting.
 
 User confirmation is supported for both general shift decisions and context-specific prompts.
@@ -163,9 +163,9 @@ If the transition folders are nested within additional folders, their directory 
 ## Bader maximum
 
 If an existing `bader_max.json` file is found:
-'''python
+```python
 Existing bader_max.json found. Load saved maximum Bader charge difference? (y/n):
-'''
+```
 The user can choose whether to reuse the stored value.
 
 The maximum is saved after processing the available results.
@@ -179,17 +179,17 @@ Initial structure
 Final structure
 
 The user is then asked:
-'''python
+```python
 Can you identify corresponding catalyst atoms in the two structures? (y/n):
-'''
+```
 After confirmation:
-'''python
+```python
 Enter catalyst atom indices (e.g. 1-35,40-45,50,52):
-'''
+```
 The maximum displacement is displayed, followed by:
-'''python
+```python
 Do these positions correspond sufficiently for the comparison? (y/n):
-'''
+```
 If rejected, the analysis is cancelled.
 
 Invalid confirmation responses are rejected until a valid y or n response is supplied.
@@ -204,10 +204,10 @@ Reference alignment is applied to a visual copy of the extracted catalyst struct
 
 ### Usage
 
-python 'main.py' ([`main.py`](main.py))
+python `main.py` ([`main.py`](main.py))
 
 ### Output options
-'''python
+```python
 layout = "horizontal", "vertical", "split"
 
 repeat = (1,1,1)
@@ -229,7 +229,7 @@ element_colors = {"Ni": "lightgray", "C": "black"}
 reference_folder = None
 
 reference_symbols = ("Ni",)
-'''
+```
 ## External function files
 
 [`io_utils.py`](io_utils.py) — Collects file locations and JSON files.
