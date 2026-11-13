@@ -2,13 +2,31 @@
 
 #Import functions for coloring
 from ase.data.colors import jmol_colors
-from ase.data import atomic_numbers
-from matplotlib.colors import TwoSlopeNorm #Used to create color gradient
+from ase.data import atomic_numbers, chemical_symbols
+from matplotlib.colors import TwoSlopeNorm, is_color_like #Used to create color gradient
 
 import numpy as np #Mathematical calculations
 
 #Collect atom colors
 def get_atom_colors(atoms,element_colors=None):
+
+    # Validate user-defined colours, if provided
+    if element_colors is not None:
+
+        if not isinstance(element_colors, dict):
+            raise ValueError("element_colors must be a dictionary.")
+
+        # Check each supplied element and its corresponding colour
+        for symbol, colour in element_colors.items():
+
+            # Check that the supplied element symbol is valid
+            if symbol not in chemical_symbols[1:]:
+                raise ValueError(f"Invalid chemical element symbol in element_colors: '{symbol}'.")
+
+            # Check that the supplied colour is valid
+            if not is_color_like(colour):
+                raise ValueError(f"Invalid colour for element '{symbol}': {colour}.")
+            
     #Initialise colour array/dictionary
     colors = {}
     #Go through each image to collect elements
@@ -49,8 +67,7 @@ def get_delta_colors(delta, max_abs, cmap, tol=0.005, repeat = (1,1,1)):
     norm = TwoSlopeNorm(
         vmin=-max_abs, #Where possible, use the maximum absolute number obtained across all images as the range
         vcenter=0,
-        vmax=max_abs
-    )
+        vmax=max_abs)
 
     #Create colormap array
     colors = cmap(norm(delta_plot))[:, :3]

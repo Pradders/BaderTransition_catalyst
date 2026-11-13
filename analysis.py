@@ -1,17 +1,14 @@
 #Data analysis
 #When defining each of the functions, where possible or necessary, default values are set, unless a new input is allocated in the main file
 
-#Use to collect, visualise atomic structures
-from ase.io import read
-
+from ase.io import read #Use to collect, visualise atomic structures
 import numpy as np #Mathematical calculations
+import os #Operating system
 
 #Import external functions
 from io_utils import read_bader, delete_file, load_json, save_json
 from check import check_catalyst_consistency, check_bader_consistency, check_bader_alignment
 from inputs import process_structures, confirm
-
-import os #Operating system
 
 #Calculate Bader charge difference
 def collect_delta_results(structure_files, skip_errors=False):
@@ -23,15 +20,16 @@ def collect_delta_results(structure_files, skip_errors=False):
     delta_max = 0.0
 
     if os.path.exists("bader_max.json"): #In case an existing bader_max.json file can be found
-
-        if confirm("\nExisting bader_max.json found. Load saved maximum Bader charge difference? (y/n): "):
+    
+        print("Existing bader_max.json found. Load saved maximum Bader charge difference?")
+        if confirm():
             delta_max = float(load_json("bader_max.json")) #If desired, load bader_max file
 
     for item in structure_files: #Read file list
 
         try:
 
-            # read structures
+            # Read the initial and final structures
             ini_atoms = read(item["ini_structure"])
             fin_atoms = read(item["fin_structure"])
 
@@ -46,7 +44,7 @@ def collect_delta_results(structure_files, skip_errors=False):
             if len(ini_q) == 0 or len(fin_q) == 0:
                 raise ValueError(f"Empty ACF.dat file in {item['transition']}")
 
-            #Checks
+            #Check that the structures and Bader data are consistent
             check_bader_consistency(item, ini_q, fin_q) #Check consistency of atomic length between files
             check_bader_alignment(ini_atoms, ini_coords) #Coordinate alignment check
             check_bader_alignment(fin_atoms, fin_coords)
@@ -71,6 +69,7 @@ def collect_delta_results(structure_files, skip_errors=False):
                 delta_max = local_max
 
             #Unwrap both initial and final structures
+            #Apply the selected shifts to the initial and final structures
             ini_atoms_update, fin_atoms_update = process_structures(ini_atoms, fin_atoms)
 
             #Extract catalyst structures

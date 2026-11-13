@@ -1,3 +1,5 @@
+#Layout of figure
+
 #Plot atoms and use colormap where necessary
 import matplotlib.pyplot as plt #Plot adsorption surfaces
 import matplotlib.gridspec as gridspec #Graphing in grid format
@@ -5,10 +7,9 @@ import matplotlib.gridspec as gridspec #Graphing in grid format
 import numpy as np #Mathematical calculations
 
 def create_axes(layout, n_rot):
-
     # n_rot is always an integer, but it cannot have no value, else the code will not proceed
     if n_rot == 0:
-        raise ValueError("At least one view must be specified.")
+        raise ValueError("At least one valid view must be specified.")
         
     if layout == "horizontal": #Horizontal
         fig, axes = plt.subplots(n_rot, 3, figsize=(12, 6*n_rot), squeeze=False)
@@ -23,16 +24,12 @@ def create_axes(layout, n_rot):
         gs = gridspec.GridSpec(2*n_rot, 2, width_ratios=[1, 1])
 
         #Pre-define axes arrays
-        axes = {
-                "ini": [],
-                "fin": [],
-                "delta": None
-            }
+        axes = {"ini": [], "fin": [], "delta": None}
 
         #Automatically add initial and final subplots on LHS
         for i in range(n_rot):
-                axes["ini"].append(fig.add_subplot(gs[2*i, 0]))
-                axes["fin"].append(fig.add_subplot(gs[2*i+1, 0]))
+            axes["ini"].append(fig.add_subplot(gs[2*i, 0]))
+            axes["fin"].append(fig.add_subplot(gs[2*i+1, 0]))
 
         #Add the charge subplot alone on the RHS
         axes["delta"] = fig.add_subplot(gs[:, 1])  # spans full right side

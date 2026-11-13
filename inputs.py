@@ -1,3 +1,6 @@
+#User inputs
+
+import os #Operating system
 from geometry import build_shift, apply_shift #Atomic shifting functions
 from plotting import view_cleanup #Create a temporary figure(s)
 from io_utils import save_json, load_json
@@ -11,6 +14,40 @@ def get_int(prompt):
             return int(input(prompt))
         except ValueError:
             print("Invalid input. Please enter an integer (e.g., -1, 0, 1).")
+
+#Check if there is a reference folder and if the user wants to apply a reference structure
+def get_reference_settings(reference_symbols, reference_folder="Reference"):
+    while True: #If the conditions are not met, then restart the loop
+        reference_mode = input(
+            "Select reference mode:\n"
+            "1: No reference\n"
+            "2: Use first NEB image as reference\n"
+            "3: Use external reference folder\n"
+            "Enter 1, 2, or 3: "
+        ).strip()
+
+        if reference_mode == "1": #No reference structure to be applied
+            return None, None
+
+        elif reference_mode == "2": #Apply only specific common elements of the first NEB image 
+            if reference_symbols is None or len(reference_symbols) == 0:
+                print("Reference symbols must be specified for mode 2.")
+                continue
+            return None, reference_symbols
+
+        elif reference_mode == "3": #Use the surface specified in a reference folder
+            if reference_symbols is None or len(reference_symbols) == 0:
+                print("Reference symbols must be specified for mode 3.")
+                continue
+
+            if not reference_folder or not os.path.isdir(reference_folder): #Check that the folder exists in the first place, or otherwise the loop restarts
+                print(f"Reference folder not found: {reference_folder}.")
+                continue
+
+            return reference_folder, reference_symbols
+
+        else:
+            print("Invalid selection. Enter 1, 2, or 3.")
 
 #Choose whether to apply shifts to all or some images
 def choose_shift_mode():
@@ -39,10 +76,10 @@ def choose_shift_mode():
         print("Invalid mode, try again.\n")
 
 #Used to accept a result
-def confirm(prompt="Accept this result/outcome? (y/n): "):
+def confirm(prompt="Accept this result/outcome?"):
     while True:
-        ans = input(prompt).lower()
-        if ans in ["y", "n"]:
+        ans = input(f"{prompt} (y/n): ").strip().lower()
+        if ans in ("y", "n"):
             return ans == "y"
         print("Please enter 'y' or 'n'.")
 

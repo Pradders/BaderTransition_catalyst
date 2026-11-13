@@ -2,6 +2,7 @@
 
 import numpy as np #Mathematical calculations
 import json #JS file
+from ase.io import read
 import os #Operating system
 
 #Collect CONTCAR folder location first, failing that POSCAR folder location, or failing that raise an error
@@ -17,6 +18,28 @@ def find_structure(folder):
         return poscar
     else:
         return None
+
+#Find and load a reference structure. CONTCAR is preferred over POSCAR, but either valid file is usable.
+def get_reference_structure(folder,repeat=(1,1,1)):
+
+    if not folder or not os.path.isdir(folder):
+        print(f"Could not load reference structure from: {folder}.")
+        return None
+
+    for filename in ("CONTCAR", "POSCAR"):
+        path = os.path.join(folder, filename)
+        if os.path.isfile(path):
+            try:
+                atoms = read(path)
+                if repeat != (1, 1, 1):
+                    atoms = atoms.repeat(repeat)
+                return atoms
+            except Exception as e:
+                print(f"Could not load reference structure: {path}: {e}.")
+
+    #Return None if neither structure could be loaded.
+    print(f"No readable CONTCAR or POSCAR found in: {folder}.")
+    return None
 
 #Collect data from ACF.dat as an array
 def read_bader(acf_file):
@@ -42,9 +65,7 @@ def read_bader(acf_file):
     missing = [col for col in required_badercols if col not in cols]
     #Check indeed if missing has any elements in it. If so, stop.
     if missing:
-        raise ValueError(
-        f"ACF.dat missing columns {missing} in {acf_file}"
-        )
+        raise ValueError(f"ACF.dat missing columns {missing} in {acf_file}")
 
     #Try to read columns
     try:
