@@ -7,12 +7,12 @@ The code is intended for systems where the total number of atoms may differ betw
 Ni → Ni-furfural
 Ni-furfural → Ni-furfural-H
 
-Version 3.0 (v3.0.0) — current release.
+Version 4.0.0 (v4.0.0) — current release.
 Improved defensive programming and input validation across structure, Bader data and catalyst-index checks.
-* Updated input confirmation to support custom prompts throughout the workflow.
-* Removed the unused atoms.py module.
-* Improved error handling for invalid catalyst selections and inconsistent atomic data.
-* Retained reference-surface alignment, structural shifting and catalyst-only Bader charge plotting.
+* Allowed initial and final structures to contain different numbers of atoms, provided that the corresponding catalyst atoms can be identified and compared.
+* Updated Bader consistency checks to validate each Bader dataset against its own corresponding structure, rather than requiring equal initial and final Bader array lengths.
+* Added full unit-cell compatibility checks between initial and final structures, including cell dimensions and orientation.
+* Preserved the original extracted catalyst structure, atom count and atom ordering during reference-surface alignment. Only the selected reference atoms are repositioned for visual consistency, while adsorbates retain their calculated positions.
 
 # Related projects
 This repository is part of a collection of ASE-based tools for visualising VASP structures and analysing Bader charge changes.
@@ -37,9 +37,11 @@ Additional validation checks that the Bader charge data, atomic structures and a
 
 The maximum displacement of the selected catalyst atoms is displayed, but identical positions are not required because structural relaxation may occur.
 
+The initial and final structures do not need to contain the same total number of atoms or have identical elemental compositions. However, the selected catalyst atoms must correspond between the two structures.
+
 ## Folder and file access
 
-The atomic positions (POSCAR/CONTCAR) and Bader charges (ACF.dat) are collected from VASP calculations.
+The atomic positions ('POSCAR'/'CONTCAR') and Bader charges ('ACF.dat') are collected from VASP calculations.
 
 These are placed within the initial and final folders of each transition, relative to `main.py`. The default folder names are `"ini"` and `"fin"`, with additional names such as `"initial"`, `"final"`, `"is"` and `"fs"` available.
 
@@ -57,9 +59,13 @@ reactionORtransition/
 
 ->-> ACF.dat
 
-CONTCAR/POSCAR and ACF.dat are mandatory.
+'CONTCAR'/'POSCAR' and 'ACF.dat' are mandatory.
 
 Incomplete transitions are excluded during file discovery. Missing files, malformed Bader data, inconsistent atom counts and coordinate mismatches are handled through explicit checks and informative errors.
+
+The total number of atoms does not need to be identical between the two structures. Each Bader dataset must, however, contain the same number of atoms as its corresponding 'POSCAR'/'CONTCAR' structure.
+
+The initial and final unit-cell matrices must also be compatible, including their dimensions and orientation.
 
 N.B. The total number of atoms does **not** need to be identical between the two structures. Only the selected catalyst atoms need to correspond.
 
@@ -68,7 +74,7 @@ N.B. The total number of atoms does **not** need to be identical between the two
 The atomic index, element and Cartesian coordinates of every atom are displayed for both structures.
 
 The user confirms that corresponding catalyst atoms can be identified and then enters their indices. Individual indices, ranges, or combinations can be used, e.g.:
-'''
+'''python
 1-35,40-45,50,52
 '''
 Displayed indices begin at 1 for convenience, while the code converts them to Python's zero-based indices.
@@ -77,17 +83,19 @@ The element at each selected index is checked between the two structures. The ma
 
 Invalid index input, empty selections, out-of-range indices and mismatched elements are checked before proceeding.
 
+This manual selection allows catalyst atoms to be compared even when adsorbates or other non-catalyst atoms are added or removed between the initial and final structures.
+
 ## Bader charge difference
 
 The catalyst-only Bader charge difference is calculated as:
 
+'''python
 Δq = q_final - q_initial
+'''
 
 For example:
 
-Ni-furfural − Ni
-
-calculates the change in Bader charge of the Ni catalyst caused by furfural adsorption.
+Ni-furfural − Ni calculates the change in Bader charge of the Ni catalyst caused by furfural adsorption.
 
 Likewise:
 
@@ -106,7 +114,7 @@ The saved maximum is managed through `bader_max.json`, allowing the user to reus
 Atoms may extend over periodic cell boundaries, particularly adsorbates. The existing shifting functionality is therefore retained.
 
 Four modes are available:
-'''
+'''python
 1. Same shift per (ini, fin) pair
 2. Manual shift for EACH structure
 3. Same shift for ALL structures
@@ -126,7 +134,11 @@ If no external reference surface is provided, the final structure is used as the
 
 Periodic boundary conditions are accounted for when matching catalyst atoms to an external reference surface.
 
-Reference structures are checked for the presence and number of the requested reference elements before visual alignment.
+Reference structures are checked for the presence and number of the requested reference elements before visual alignment. Their full unit-cell compatibility with the input structures is also checked.
+
+Reference alignment changes only the visual positions of the selected reference atoms in a copy of the extracted catalyst structure. The original catalyst atom count and ordering are preserved, and non-reference atoms, including selected adsorbates, retain their calculated positions.
+
+The reference structure therefore determines the periodic representation of the selected substrate atoms; it does not replace the extracted catalyst structure used in the final figure.
 
 ## Colour coding
 
@@ -151,7 +163,7 @@ If the transition folders are nested within additional folders, their directory 
 ## Bader maximum
 
 If an existing `bader_max.json` file is found:
-'''
+'''python
 Existing bader_max.json found. Load saved maximum Bader charge difference? (y/n):
 '''
 The user can choose whether to reuse the stored value.
@@ -167,15 +179,15 @@ Initial structure
 Final structure
 
 The user is then asked:
-'''
+'''python
 Can you identify corresponding catalyst atoms in the two structures? (y/n):
 '''
 After confirmation:
-'''
+'''python
 Enter catalyst atom indices (e.g. 1-35,40-45,50,52):
 '''
 The maximum displacement is displayed, followed by:
-'''
+'''python
 Do these positions correspond sufficiently for the comparison? (y/n):
 '''
 If rejected, the analysis is cancelled.
@@ -186,14 +198,16 @@ Invalid confirmation responses are rejected until a valid y or n response is sup
 
 An optional reference surface may be supplied for structural visualisation. This is to ensure consistent alignment of atoms. If a reference folder is provided, the reference structure is used to align the catalyst surface in the Bader plot. If no reference folder is provided, the final structure is used as the reference surface.
 
+Reference alignment is applied to a visual copy of the extracted catalyst structure. It does not replace the catalyst atoms or change the Bader charge data.
+
 ## Key files, folders and inputs
 
 ### Usage
 
-python main.py ([`main.py`](main.py))
+python 'main.py' ([`main.py`](main.py))
 
 ### Output options
-
+'''python
 layout = "horizontal", "vertical", "split"
 
 repeat = (1,1,1)
@@ -215,7 +229,7 @@ element_colors = {"Ni": "lightgray", "C": "black"}
 reference_folder = None
 
 reference_symbols = ("Ni",)
-
+'''
 ## External function files
 
 [`io_utils.py`](io_utils.py) — Collects file locations and JSON files.
