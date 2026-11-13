@@ -41,7 +41,7 @@ The initial and final structures do not need to contain the same total number of
 
 ## Folder and file access
 
-The atomic positions ('POSCAR'/'CONTCAR') and Bader charges ('ACF.dat') are collected from VASP calculations.
+The atomic positions (`POSCAR`/`CONTCAR`) and Bader charges (`ACF.dat`) are collected from VASP calculations.
 
 These are placed within the initial and final folders of each transition, relative to `main.py`. The default folder names are `"ini"` and `"fin"`, with additional names such as `"initial"`, `"final"`, `"is"` and `"fs"` available.
 
@@ -59,11 +59,11 @@ reactionORtransition/
 
 ->-> ACF.dat
 
-'CONTCAR'/'POSCAR' and 'ACF.dat' are mandatory.
+`CONTCAR`/`POSCAR` and `ACF.dat` are mandatory.
 
 Incomplete transitions are excluded during file discovery. Missing files, malformed Bader data, inconsistent atom counts and coordinate mismatches are handled through explicit checks and informative errors.
 
-The total number of atoms does not need to be identical between the two structures. Each Bader dataset must, however, contain the same number of atoms as its corresponding 'POSCAR'/'CONTCAR' structure.
+The total number of atoms does not need to be identical between the two structures. Each Bader dataset must, however, contain the same number of atoms as its corresponding `POSCAR`/`CONTCAR` structure.
 
 The initial and final unit-cell matrices must also be compatible, including their dimensions and orientation.
 
